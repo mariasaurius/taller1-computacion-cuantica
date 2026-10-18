@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qubit en ondas</title>
+<meta name="description" content="Widget interactivo: un qubit como superposición de las ondas cos t y cos 2t, con plano complejo, ondas y esfera de Bloch enlazados.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+  :root{
+    --bg:#f7f6f2; --card:#ffffff; --ink:#1d1d1f; --muted:#5f6368; --line:#d9d6cc;
+    --a:#1F5FA8; --b:#D35400; --psi:#1d1d1f; --p:#7D3C98; --grid:#e8e5dc;
+    --verde:#4A6D2B; --rojo:#A61C2D;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink)}
+  body{font:16px/1.55 Georgia,"Times New Roman",serif}
+  main{max-width:1240px;margin:0 auto;padding:28px 16px 48px}
+  header h1{font:600 1.7rem/1.2 system-ui,-apple-system,"Segoe UI",sans-serif;margin:0 0 6px}
+  header p{margin:0;color:var(--muted);max-width:820px}
+  .barra{height:3px;background:var(--rojo);margin:14px 0 20px;max-width:240px}
+  .controles{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin:0 0 16px;
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:.92rem}
+  .controles .grupo{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  button{font:inherit;border:1px solid var(--line);background:var(--card);border-radius:6px;
+    padding:4px 10px;cursor:pointer}
+  button:hover{border-color:var(--p);color:var(--p)}
+  input[type=range]{width:220px;accent-color:var(--p)}
+  .paneles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+  @media (max-width:980px){.paneles{grid-template-columns:1fr}}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 10px 6px}
+  .panel h2{font:600 .95rem/1.3 system-ui,-apple-system,"Segoe UI",sans-serif;margin:2px 4px 2px}
+  .panel .ayuda{font:.8rem/1.3 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--muted);margin:0 4px 4px}
+  svg{width:100%;height:auto;display:block;touch-action:none;user-select:none}
+  .arrastrable{cursor:grab}
+  .lectura{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:14px 0 0;
+    font:.86rem/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  @media (max-width:980px){.lectura{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media (max-width:560px){.lectura{grid-template-columns:1fr}}
+  .lectura div{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+  .lectura b{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+  section.formulas{margin-top:30px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px 22px 18px}
+  section.formulas h2{font:600 1.25rem/1.3 system-ui,-apple-system,"Segoe UI",sans-serif;margin:16px 0 4px}
+  section.formulas h3{font:600 1rem/1.3 system-ui,-apple-system,"Segoe UI",sans-serif;margin:18px 0 2px;color:var(--verde)}
+  section.formulas p{margin:6px 0}
+  .katex-display{overflow-x:auto;overflow-y:hidden;padding:2px 0}
+  footer{margin-top:22px;color:var(--muted);font:.85rem/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+  footer a{color:var(--a)}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>Un qubit como superposición de ondas</h1>
+  <p>Los estados $\ket0\leftrightarrow\cos t$ y $\ket1\leftrightarrow\cos 2t$, con la multiplicación
+  $(Ae^{ix})\cdot\cos nt=A\cos(nt-x)$, forman el espacio de estados de un qubit. Los tres paneles
+  muestran el mismo estado $\ket\psi=\alpha\ket0+\beta\ket1$ normalizado, $|\alpha|^2+|\beta|^2=1$:
+  al mover cualquiera de ellos, los otros dos se actualizan.</p>
+  <div class="barra"></div>
+</header>
+
+<div class="controles">
+  <div class="grupo"><span>Estados:</span>
+    <button data-estado="0">|0⟩</button><button data-estado="1">|1⟩</button>
+    <button data-estado="+">|+⟩</button><button data-estado="-">|−⟩</button>
+    <button data-estado="+i">|+i⟩</button><button data-estado="-i">|−i⟩</button>
+  </div>
+  <div class="grupo">
+    <label for="gamma">Fase global γ = arg α:</label>
+    <input id="gamma" type="range" min="-180" max="180" step="1" value="0">
+    <span id="gammaValor">0°</span>
+  </div>
+</div>
+
+<div class="paneles">
+  <div class="panel">
+    <h2>(a) Plano complejo</h2>
+    <p class="ayuda">Arrastre el punto azul (α) o el naranja (β). El otro ajusta su módulo para mantener la norma 1.</p>
+    <svg id="svgA" viewBox="0 0 300 300" aria-label="Plano complejo con α y β"></svg>
+  </div>
+  <div class="panel">
+    <h2>(b) Ondas</h2>
+    <p class="ayuda">Arrastre las crestas: su posición en t fija la fase y su altura el módulo.</p>
+    <svg id="svgB" viewBox="0 0 420 300" aria-label="Ondas α|0⟩, β|1⟩ y ψ"></svg>
+  </div>
+  <div class="panel">
+    <h2>(c) Esfera de Bloch</h2>
+    <p class="ayuda">Arrastre para girar la vista.</p>
+    <svg id="svgC" viewBox="0 0 300 300" aria-label="Esfera de Bloch"></svg>
+  </div>
+</div>
+
+<div class="lectura" id="lectura"></div>
+
+<section class="formulas">
+  <h2>Fórmulas para pasar de un panel a otro</h2>
+  <p>El desarrollo completo está en el taller; aquí se resumen las fórmulas que usa el widget.
+  En todas, $\alpha=|\alpha|e^{i\arg\alpha}$ y $\beta=|\beta|e^{i\arg\beta}$.</p>
+
+  <h3>(a) → (b): de los coeficientes a las ondas</h3>
+  <p>Por la regla de multiplicación, cada coeficiente desplaza y escala su onda:</p>
+  $$\alpha\ket0=|\alpha|\cos(t-\arg\alpha),\qquad \beta\ket1=|\beta|\cos(2t-\arg\beta),\qquad
+    \psi(t)=|\alpha|\cos(t-\arg\alpha)+|\beta|\cos(2t-\arg\beta).$$
+  <p>La cresta de $\alpha\ket0$ está en $t_\alpha=\arg\alpha$ y tiene altura $|\alpha|$; las de
+  $\beta\ket1$ están en $t_\beta=\tfrac12\arg\beta$ y en $t_\beta+\pi$, con altura $|\beta|$.</p>
+
+  <h3>(b) → (a): de la onda a los coeficientes</h3>
+  <p>Los coeficientes son los productos hermíticos del punto 1.1 con $\ket0$ y $\ket1$:</p>
+  $$\alpha=\braket{0}{\psi}=\frac1\pi\int_0^{2\pi}\psi(t)\,e^{it}\,dt,\qquad
+    \beta=\braket{1}{\psi}=\frac1\pi\int_0^{2\pi}\psi(t)\,e^{2it}\,dt .$$
+  <p>Leídos en las crestas: $|\alpha|$ y $|\beta|$ son las alturas, $\arg\alpha=t_\alpha$ y
+  $\arg\beta=2t_\beta$.</p>
+
+  <h3>(a) → (c): de los coeficientes a la esfera</h3>
+  $$\cos\tfrac\theta2=|\alpha|,\quad \sin\tfrac\theta2=|\beta|,\quad \varphi=\arg\beta-\arg\alpha,$$
+  $$\vec r=(\sin\theta\cos\varphi,\ \sin\theta\sin\varphi,\ \cos\theta)
+    =\bigl(2\operatorname{Re}(\overline\alpha\beta),\ 2\operatorname{Im}(\overline\alpha\beta),\ |\alpha|^2-|\beta|^2\bigr).$$
+  <p>Si $\alpha=0$ o $\beta=0$ el estado está en un polo y $\varphi$ no interviene.</p>
+
+  <h3>(c) → (a): de la esfera a los coeficientes</h3>
+  $$\alpha=e^{i\gamma}\cos\tfrac\theta2,\qquad \beta=e^{i(\gamma+\varphi)}\sin\tfrac\theta2,$$
+  <p>donde la fase global $\gamma$ es libre: la esfera no la registra.</p>
+
+  <h3>(b) → (c): de la onda a la esfera</h3>
+  $$\cos\theta=|\alpha|^2-|\beta|^2=(\text{altura de }\alpha\ket0)^2-(\text{altura de }\beta\ket1)^2,
+    \qquad \varphi\equiv 2t_\beta-t_\alpha \pmod{2\pi}.$$
+  <p>La latitud mide cómo se reparte la norma entre las frecuencias $1$ y $2$; la longitud mide el
+  desfase entre las crestas, contado en la escala de la frecuencia $2$.</p>
+
+  <h3>(c) → (b): de la esfera a la onda</h3>
+  $$\psi(t)=\cos\tfrac\theta2\,\cos(t-\gamma)+\sin\tfrac\theta2\,\cos(2t-\gamma-\varphi).$$
+
+  <h3>Fase global y desplazamientos en el tiempo</h3>
+  <p>Multiplicar el estado por $e^{i\gamma}$ corre la onda $\alpha\ket0$ una distancia $\gamma$ y
+  la onda $\beta\ket1$ solo $\gamma/2$, de modo que $\psi$ cambia de forma, pero el punto de Bloch
+  no se mueve. En cambio, desplazar $\psi$ en el tiempo una cantidad $\tau$ multiplica $\alpha$ por
+  $e^{i\tau}$ y $\beta$ por $e^{2i\tau}$; esto suma $\tau$ a $\varphi$ y hace girar el punto de
+  Bloch alrededor del eje $z$.</p>
+</section>
+
+<footer>
+  Introducción a la Computación Cuántica — Universidad Nacional de Colombia, sede Medellín. Taller 1, punto 1.2.
+  La versión en Python (Jupyter, con ipywidgets) está en la carpeta <code>notebooks/</code> del
+  <a id="enlaceRepo" href="https://github.com/mariasaurius/taller1-computacion-cuantica">repositorio</a>.
+</footer>
+</main>
+
+<script>
+"use strict";
+// =====================================================================
+//  Estado y fórmulas (mismas funciones que el notebook de Python)
+// =====================================================================
+const TAU = 2 * Math.PI;
+const S2 = Math.SQRT1_2;
+const COL = {a: "#1F5FA8", b: "#D35400", psi: "#1d1d1f", p: "#7D3C98",
+             eje: "#9a9a9a", tenue: "#cfcbc0", texto: "#4a4a4a"};
+
+// El estado se guarda como módulos y fases por separado, para no perder la
+// fase de un coeficiente cuando su módulo vale 0.
+const st = {ra: S2, pa: 0, rb: S2, pb: Math.PI / 3};
+
+function envolver(p) {               // lleva un ángulo a (-π, π]
+  let q = ((p + Math.PI) % TAU + TAU) % TAU - Math.PI;
+  return q === -Math.PI ? Math.PI : q;
+}
+const clip = (x, a, b) => Math.min(b, Math.max(a, x));
+
+function fijarEstado(a, b) {          // a, b como [re, im]
+  const ma = Math.hypot(a[0], a[1]), mb = Math.hypot(b[0], b[1]);
+  const n = Math.hypot(ma, mb);
+  st.ra = ma / n; st.pa = Math.atan2(a[1], a[0]);
+  st.rb = mb / n; st.pb = Math.atan2(b[1], b[0]);
+}
+function fijarAlpha(r, p) { st.ra = clip(r, 0, 1); st.pa = envolver(p); st.rb = Math.sqrt(1 - st.ra ** 2); }
+function fijarBeta(r, p)  { st.rb = clip(r, 0, 1); st.pb = envolver(p); st.ra = Math.sqrt(1 - st.rb ** 2); }
+
+// (a)→(b): α|0⟩, β|1⟩ y ψ evaluadas en t
+function ondas(t) {
+  const f = st.ra * Math.cos(t - st.pa);
+  const g = st.rb * Math.cos(2 * t - st.pb);
+  return [f, g, f + g];
+}
+// (b)→(a): α = (1/π)∫ψ e^{it} dt, β = (1/π)∫ψ e^{2it} dt (suma de Riemann)
+function coeficientes(N = 2000) {
+  const dt = TAU / N;
+  let ar = 0, ai = 0, br = 0, bi = 0, n2 = 0;
+  for (let k = 0; k < N; k++) {
+    const t = k * dt, v = ondas(t)[2];
+    ar += v * Math.cos(t); ai += v * Math.sin(t);
+    br += v * Math.cos(2 * t); bi += v * Math.sin(2 * t);
+    n2 += v * v;
+  }
+  const c = dt / Math.PI;
+  return {alpha: [ar * c, ai * c], beta: [br * c, bi * c], norma2: n2 * c};
+}
+// (a)→(c): θ, φ y r = (sinθ cosφ, sinθ sinφ, cosθ)
+function bloch() {
+  const theta = 2 * Math.atan2(st.rb, st.ra);
+  const phi = envolver(st.pb - st.pa);
+  const r = [Math.sin(theta) * Math.cos(phi), Math.sin(theta) * Math.sin(phi), Math.cos(theta)];
+  return {theta, phi, r};
+}
+
+// =====================================================================
+//  Utilidades SVG
+// =====================================================================
+const NS = "http://www.w3.org/2000/svg";
+function el(padre, tag, attrs = {}, texto) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (texto !== undefined) e.textContent = texto;
+  padre.appendChild(e);
+  return e;
+}
+function puntoSVG(svg, ev) {
+  const p = svg.createSVGPoint();
+  p.x = ev.clientX; p.y = ev.clientY;
+  return p.matrixTransform(svg.getScreenCTM().inverse());
+}
+// distancia en píxeles de pantalla entre un evento y un punto del viewBox
+function distPx(svg, ev, x, y) {
+  const p = svg.createSVGPoint(); p.x = x; p.y = y;
+  const q = p.matrixTransform(svg.getScreenCTM());
+  return Math.hypot(q.x - ev.clientX, q.y - ev.clientY);
+}
+function arrastre(svg, alPresionar, alMover) {
+  let activo = null;
+  svg.addEventListener("pointerdown", ev => {
+    activo = alPresionar(ev);
+    if (activo) { svg.setPointerCapture(ev.pointerId); ev.preventDefault(); }
+  });
+  svg.addEventListener("pointermove", ev => { if (activo) { alMover(activo, ev); actualizar(); } });
+  const fin = () => { activo = null; };
+  svg.addEventListener("pointerup", fin);
+  svg.addEventListener("pointercancel", fin);
+}
+
+// =====================================================================
+//  (a) Plano complejo
+// =====================================================================
+const svgA = document.getElementById("svgA");
+const A = {c: 150, s: 112};
+const aX = x => A.c + A.s * x, aY = y => A.c - A.s * y;
+(function construirA() {
+  for (let k = -1; k <= 1; k += 0.5) {
+    el(svgA, "line", {x1: aX(k), y1: aY(-1.25), x2: aX(k), y2: aY(1.25), stroke: COL.tenue, "stroke-width": k === 0 ? 0 : 0.6});
+    el(svgA, "line", {x1: aX(-1.25), y1: aY(k), x2: aX(1.25), y2: aY(k), stroke: COL.tenue, "stroke-width": k === 0 ? 0 : 0.6});
+  }
+  el(svgA, "line", {x1: aX(-1.3), y1: aY(0), x2: aX(1.3), y2: aY(0), stroke: COL.eje});
+  el(svgA, "line", {x1: aX(0), y1: aY(-1.3), x2: aX(0), y2: aY(1.3), stroke: COL.eje});
+  el(svgA, "circle", {cx: aX(0), cy: aY(0), r: A.s, fill: "none", stroke: "#8c8c8c"});
+  el(svgA, "text", {x: aX(1.3) - 2, y: aY(0) - 6, "text-anchor": "end", "font-size": 12, fill: COL.texto}, "Re");
+  el(svgA, "text", {x: aX(0) + 6, y: aY(1.3) + 10, "font-size": 12, fill: COL.texto}, "Im");
+  el(svgA, "text", {x: aX(1) + 3, y: aY(0) + 14, "font-size": 11, fill: COL.texto}, "1");
+})();
+const objA = {};
+for (const [k, col, nombre] of [["a", COL.a, "α"], ["b", COL.b, "β"]]) {
+  objA[k] = {
+    circ: el(svgA, "circle", {cx: aX(0), cy: aY(0), r: 0, fill: "none", stroke: col, "stroke-dasharray": "3 4", opacity: 0.7}),
+    vec: el(svgA, "line", {x1: aX(0), y1: aY(0), stroke: col, "stroke-width": 2.4}),
+    pt: el(svgA, "circle", {r: 8, fill: col, stroke: "#fff", "stroke-width": 2, class: "arrastrable"}),
+    lbl: el(svgA, "text", {"font-size": 17, "font-weight": 700, fill: col}, nombre),
+  };
+}
+arrastre(svgA,
+  ev => {
+    let mejor = null, dmin = 22;
+    for (const [k, r, p] of [["a", st.ra, st.pa], ["b", st.rb, st.pb]]) {
+      const d = distPx(svgA, ev, aX(r * Math.cos(p)), aY(r * Math.sin(p)));
+      if (d < dmin) { mejor = k; dmin = d; }
+    }
+    return mejor;
+  },
+  (k, ev) => {
+    const q = puntoSVG(svgA, ev);
+    const x = (q.x - A.c) / A.s, y = (A.c - q.y) / A.s, m = Math.hypot(x, y);
+    const fase = m > 1e-6 ? Math.atan2(y, x) : (k === "a" ? st.pa : st.pb);
+    (k === "a" ? fijarAlpha : fijarBeta)(m, fase);
+  });
+
+// =====================================================================
+//  (b) Ondas
+// =====================================================================
+const svgB = document.getElementById("svgB");
+const B = {x0: 36, x1: 404, y0: 22, y1: 258, ymax: 1.6};
+const bX = t => B.x0 + (B.x1 - B.x0) * t / TAU;
+const bY = y => (B.y0 + B.y1) / 2 - (B.y1 - B.y0) / 2 * y / B.ymax;
+(function construirB() {
+  const etiquetas = ["0", "π/2", "π", "3π/2", "2π"];
+  for (let k = 0; k <= 4; k++) {
+    const x = bX(k * Math.PI / 2);
+    el(svgB, "line", {x1: x, y1: B.y0, x2: x, y2: B.y1, stroke: COL.tenue, "stroke-width": 0.6});
+    el(svgB, "text", {x: x, y: bY(0) + 15, "text-anchor": "middle", "font-size": 11, fill: COL.texto}, etiquetas[k]);
+  }
+  for (const y of [-1, 1]) {
+    el(svgB, "line", {x1: B.x0, y1: bY(y), x2: B.x1, y2: bY(y), stroke: COL.tenue, "stroke-width": 0.6});
+    el(svgB, "text", {x: B.x0 - 6, y: bY(y) + 4, "text-anchor": "end", "font-size": 11, fill: COL.texto}, y);
+  }
+  el(svgB, "line", {x1: B.x0, y1: bY(0), x2: B.x1 + 8, y2: bY(0), stroke: COL.eje});
+  el(svgB, "line", {x1: B.x0, y1: B.y0 - 6, x2: B.x0, y2: B.y1, stroke: COL.eje});
+  el(svgB, "text", {x: B.x1 + 10, y: bY(0) + 4, "font-size": 12, "font-style": "italic", fill: COL.texto}, "t");
+  // leyenda
+  const ley = [["α|0⟩", COL.a, "6 4", 1.8], ["β|1⟩", COL.b, "6 4", 1.8], ["ψ", COL.psi, "", 2.8]];
+  ley.forEach(([txt, col, dash, w], i) => {
+    const x = B.x0 + 30 + i * 92, y = 290;
+    el(svgB, "line", {x1: x, y1: y - 4, x2: x + 24, y2: y - 4, stroke: col, "stroke-width": w, "stroke-dasharray": dash});
+    el(svgB, "text", {x: x + 30, y: y, "font-size": 12, fill: col}, txt);
+  });
+})();
+const objB = {
+  fa: el(svgB, "path", {fill: "none", stroke: COL.a, "stroke-width": 1.8, "stroke-dasharray": "6 4"}),
+  fb: el(svgB, "path", {fill: "none", stroke: COL.b, "stroke-width": 1.8, "stroke-dasharray": "6 4"}),
+  psi: el(svgB, "path", {fill: "none", stroke: COL.psi, "stroke-width": 2.8}),
+  ca: el(svgB, "circle", {r: 7, fill: COL.a, stroke: "#fff", "stroke-width": 2, class: "arrastrable"}),
+  cb1: el(svgB, "circle", {r: 7, fill: COL.b, stroke: "#fff", "stroke-width": 2, class: "arrastrable"}),
+  cb2: el(svgB, "circle", {r: 7, fill: COL.b, stroke: "#fff", "stroke-width": 2, class: "arrastrable"}),
+};
+function crestas() {
+  const ta = ((st.pa % TAU) + TAU) % TAU;
+  const tb = ((st.pb / 2 % Math.PI) + Math.PI) % Math.PI;
+  return {a: [[ta, st.ra]], b: [[tb, st.rb], [tb + Math.PI, st.rb]]};
+}
+arrastre(svgB,
+  ev => {
+    let mejor = null, dmin = 22;
+    for (const [k, lista] of Object.entries(crestas()))
+      for (const [t, y] of lista) {
+        const d = distPx(svgB, ev, bX(t), bY(y));
+        if (d < dmin) { mejor = k; dmin = d; }
+      }
+    return mejor;
+  },
+  (k, ev) => {
+    const q = puntoSVG(svgB, ev);
+    const t = clip((q.x - B.x0) / (B.x1 - B.x0) * TAU, 0, TAU);
+    const y = ((B.y0 + B.y1) / 2 - q.y) / ((B.y1 - B.y0) / 2) * B.ymax;
+    if (k === "a") fijarAlpha(y, t); else fijarBeta(y, 2 * t);
+  });
+
+// =====================================================================
+//  (c) Esfera de Bloch (proyección ortográfica)
+// =====================================================================
+const svgC = document.getElementById("svgC");
+const C = {c: 150, R: 104, az: 35 * Math.PI / 180, el: 20 * Math.PI / 180};
+// devuelve [x pantalla, y pantalla, profundidad]; profundidad > 0 = hacia el observador
+function proy(x, y, z) {
+  const d = x * Math.cos(C.az) + y * Math.sin(C.az);      // hacia el observador
+  const h = -x * Math.sin(C.az) + y * Math.cos(C.az);     // horizontal
+  const v = z * Math.cos(C.el) - d * Math.sin(C.el);      // vertical
+  const prof = d * Math.cos(C.el) + z * Math.sin(C.el);
+  return [C.c + C.R * h, C.c - C.R * v, prof];
+}
+const gEsfera = el(svgC, "g");
+const objC = {
+  proy: el(svgC, "path", {fill: "none", stroke: COL.p, "stroke-width": 1.2, "stroke-dasharray": "2 3"}),
+  vec: el(svgC, "line", {stroke: COL.p, "stroke-width": 2.8}),
+  pt: el(svgC, "circle", {r: 7, fill: COL.p, stroke: "#fff", "stroke-width": 2}),
+};
+function dibujarEsfera() {
+  gEsfera.replaceChildren();
+  el(gEsfera, "circle", {cx: C.c, cy: C.c, r: C.R, fill: "#faf9f6", stroke: "#8c8c8c"});
+  // ecuador y dos meridianos: tramo de atrás punteado, tramo de adelante continuo
+  const curvas = [
+    s => [Math.cos(s), Math.sin(s), 0],
+    s => [Math.cos(s), 0, Math.sin(s)],
+    s => [0, Math.cos(s), Math.sin(s)],
+  ];
+  curvas.forEach((f, i) => {
+    let frente = "", atras = "";
+    const n = 120;
+    for (let k = 0; k < n; k++) {
+      const p = proy(...f(k * TAU / n)), q = proy(...f((k + 1) * TAU / n));
+      const seg = `M${p[0].toFixed(1)} ${p[1].toFixed(1)}L${q[0].toFixed(1)} ${q[1].toFixed(1)}`;
+      if (p[2] + q[2] >= 0) frente += seg; else atras += seg;
+    }
+    el(gEsfera, "path", {d: atras, fill: "none", stroke: COL.tenue, "stroke-width": 1, "stroke-dasharray": "3 3"});
+    el(gEsfera, "path", {d: frente, fill: "none", stroke: i === 0 ? "#8c8c8c" : "#bdb8ab", "stroke-width": i === 0 ? 1.3 : 1});
+  });
+  // ejes y etiquetas de los seis estados de referencia
+  for (const e of [[1, 0, 0], [0, 1, 0], [0, 0, 1]]) {
+    const p = proy(...e.map(v => -v)), q = proy(...e);
+    el(gEsfera, "line", {x1: p[0], y1: p[1], x2: q[0], y2: q[1], stroke: COL.eje, "stroke-width": 0.8});
+  }
+  const etiq = [[[0, 0, 1.2], "|0⟩"], [[0, 0, -1.22], "|1⟩"], [[1.28, 0, 0], "|+⟩"], [[-1.28, 0, 0], "|−⟩"],
+                [[0, 1.28, 0], "|+i⟩"], [[0, -1.28, 0], "|−i⟩"]];
+  for (const [pos, txt] of etiq) {
+    const p = proy(...pos);
+    el(gEsfera, "text", {x: p[0], y: p[1] + 4, "text-anchor": "middle", "font-size": 12, fill: COL.texto,
+      opacity: p[2] < -0.05 ? 0.55 : 1}, txt);
+  }
+}
+arrastre(svgC,
+  ev => ({x: ev.clientX, y: ev.clientY}),
+  (ini, ev) => {
+    C.az -= (ev.clientX - ini.x) * 0.01;
+    C.el = clip(C.el + (ev.clientY - ini.y) * 0.01, -1.45, 1.45);
+    ini.x = ev.clientX; ini.y = ev.clientY;
+  });
+
+// =====================================================================
+//  Controles y lectura numérica
+// =====================================================================
+const ESTADOS = {"0": [[1, 0], [0, 0]], "1": [[0, 0], [1, 0]], "+": [[S2, 0], [S2, 0]],
+                 "-": [[S2, 0], [-S2, 0]], "+i": [[S2, 0], [0, S2]], "-i": [[S2, 0], [0, -S2]]};
+document.querySelectorAll("button[data-estado]").forEach(btn =>
+  btn.addEventListener("click", () => { fijarEstado(...ESTADOS[btn.dataset.estado]); actualizar(); }));
+
+const gamma = document.getElementById("gamma"), gammaValor = document.getElementById("gammaValor");
+let gammaPrevio = 0;
+gamma.addEventListener("input", () => {
+  const d = (Number(gamma.value) - gammaPrevio) * Math.PI / 180;
+  gammaPrevio = Number(gamma.value);
+  st.pa = envolver(st.pa + d); st.pb = envolver(st.pb + d);
+  actualizar(false);
+});
+
+const grados = x => (x * 180 / Math.PI).toFixed(1) + "°";
+const cplx = ([re, im]) => `${re >= 0 ? "+" : "−"}${Math.abs(re).toFixed(3)} ${im >= 0 ? "+" : "−"} ${Math.abs(im).toFixed(3)}i`;
+
+function actualizar(sincronizarGamma = true) {
+  const a = [st.ra * Math.cos(st.pa), st.ra * Math.sin(st.pa)];
+  const b = [st.rb * Math.cos(st.pb), st.rb * Math.sin(st.pb)];
+
+  // (a)
+  for (const [k, z, r] of [["a", a, st.ra], ["b", b, st.rb]]) {
+    const o = objA[k];
+    o.circ.setAttribute("r", A.s * r);
+    o.vec.setAttribute("x2", aX(z[0])); o.vec.setAttribute("y2", aY(z[1]));
+    o.pt.setAttribute("cx", aX(z[0])); o.pt.setAttribute("cy", aY(z[1]));
+    o.lbl.setAttribute("x", aX(z[0]) + 9); o.lbl.setAttribute("y", aY(z[1]) - 9);
+  }
+
+  // (b)
+  let da = "", db = "", dp = "";
+  for (let k = 0; k <= 400; k++) {
+    const t = k * TAU / 400, [f, g, p] = ondas(t), c = k ? "L" : "M", x = bX(t).toFixed(1);
+    da += `${c}${x} ${bY(f).toFixed(1)}`; db += `${c}${x} ${bY(g).toFixed(1)}`; dp += `${c}${x} ${bY(p).toFixed(1)}`;
+  }
+  objB.fa.setAttribute("d", da); objB.fb.setAttribute("d", db); objB.psi.setAttribute("d", dp);
+  const cr = crestas();
+  objB.ca.setAttribute("cx", bX(cr.a[0][0])); objB.ca.setAttribute("cy", bY(cr.a[0][1]));
+  objB.cb1.setAttribute("cx", bX(cr.b[0][0])); objB.cb1.setAttribute("cy", bY(cr.b[0][1]));
+  objB.cb2.setAttribute("cx", bX(cr.b[1][0])); objB.cb2.setAttribute("cy", bY(cr.b[1][1]));
+
+  // (c)
+  dibujarEsfera();
+  const {theta, phi, r} = bloch();
+  const o = proy(0, 0, 0), pr = proy(...r), pe = proy(r[0], r[1], 0);
+  objC.vec.setAttribute("x1", o[0]); objC.vec.setAttribute("y1", o[1]);
+  objC.vec.setAttribute("x2", pr[0]); objC.vec.setAttribute("y2", pr[1]);
+  objC.pt.setAttribute("cx", pr[0]); objC.pt.setAttribute("cy", pr[1]);
+  objC.pt.setAttribute("opacity", pr[2] < 0 ? 0.6 : 1);
+  objC.proy.setAttribute("d", `M${pr[0]} ${pr[1]}L${pe[0]} ${pe[1]}L${o[0]} ${o[1]}`);
+
+  if (sincronizarGamma) {
+    gammaPrevio = Math.round(st.pa * 180 / Math.PI);
+    gamma.value = gammaPrevio;
+  }
+  gammaValor.textContent = Math.round(st.pa * 180 / Math.PI) + "°";
+
+  // lectura numérica
+  const num = coeficientes();
+  const ta = cr.a[0][0], tb = cr.b[0][0];
+  document.getElementById("lectura").innerHTML = `
+    <div><b style="color:${COL.a}">α</b> = ${cplx(a)}<br>|α| = ${st.ra.toFixed(3)}, arg α = ${grados(st.pa)}<br>P(0) = |α|² = ${(st.ra ** 2).toFixed(3)}</div>
+    <div><b style="color:${COL.b}">β</b> = ${cplx(b)}<br>|β| = ${st.rb.toFixed(3)}, arg β = ${grados(st.pb)}<br>P(1) = |β|² = ${(st.rb ** 2).toFixed(3)}</div>
+    <div><b>Onda → coeficientes</b> (Riemann, N = 2000)<br>(1/π)∫ψ e<sup>it</sup> dt = ${cplx(num.alpha)}<br>(1/π)∫ψ e<sup>2it</sup> dt = ${cplx(num.beta)}<br>(1/π)∫ψ² dt = ${num.norma2.toFixed(3)}</div>
+    <div><b style="color:${COL.p}">Bloch</b><br>θ = ${grados(theta)}, φ = ${grados(phi)}<br>crestas: t<sub>α</sub> = ${grados(ta)}, t<sub>β</sub> = ${grados(tb)}<br>r = (${r.map(v => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(3)).join(", ")})</div>`;
+}
+
+// enlace al repositorio a partir de la URL de GitHub Pages (usuario.github.io/repo)
+(function enlaceRepo() {
+  const m = location.hostname.match(/^([^.]+)\.github\.io$/);
+  const repo = location.pathname.split("/").filter(Boolean)[0];
+  if (m && repo) document.getElementById("enlaceRepo").href = `https://github.com/${m[1]}/${repo}`;
+})();
+
+actualizar();
+window.addEventListener("DOMContentLoaded", () => {
+  if (typeof renderMathInElement !== "function") return;   // sin conexión: el widget funciona igual
+  renderMathInElement(document.body, {
+    delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}],
+    macros: {"\\ket": "\\lvert #1\\rangle", "\\braket": "\\langle #1\\mid #2\\rangle"},
+    ignoredClasses: ["lectura"],
+  });
+});
+</script>
+</body>
+</html>
