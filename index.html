@@ -68,7 +68,7 @@
     <button data-estado="+i">|+i⟩</button><button data-estado="-i">|−i⟩</button>
   </div>
   <div class="grupo">
-    <label for="gamma">Fase global γ = arg α:</label>
+    <label for="gamma">Fase global γ (gira α y β juntos; fija x = fase de α):</label>
     <input id="gamma" type="range" min="-180" max="180" step="1" value="0">
     <span id="gammaValor">0°</span>
   </div>
@@ -77,7 +77,7 @@
 <div class="paneles">
   <div class="panel">
     <h2>(a) Plano complejo</h2>
-    <p class="ayuda">Arrastre el punto azul (α) o el naranja (β). El otro ajusta su módulo para mantener la norma 1.</p>
+    <p class="ayuda">Arrastre el punto azul (α) o el naranja (β). El otro ajusta su módulo para mantener la norma 1. El arco rojo es la fase relativa y − x.</p>
     <svg id="svgA" viewBox="0 0 300 300" aria-label="Plano complejo con α y β"></svg>
   </div>
   <div class="panel">
@@ -97,47 +97,72 @@
 <section class="formulas">
   <h2>Fórmulas para pasar de un panel a otro</h2>
   <p>El desarrollo completo está en el taller; aquí se resumen las fórmulas que usa el widget.
-  En todas, $\alpha=|\alpha|e^{i\arg\alpha}$ y $\beta=|\beta|e^{i\arg\beta}$.</p>
+  El estado es $\ket\psi=\alpha\ket0+\beta\ket1$ con $|\alpha|^2+|\beta|^2=1$, y sus coeficientes
+  se escriben en forma polar con las mismas letras de la regla del enunciado:</p>
+  $$\alpha=Ae^{ix},\qquad \beta=Be^{iy},\qquad A,B\ge0,\qquad A^2+B^2=1 .$$
+  <p>$A$ y $B$ son los módulos (las probabilidades de medir $0$ y $1$ son $A^2$ y $B^2$), y $x$, $y$
+  son las fases.</p>
 
   <h3>(a) → (b): de los coeficientes a las ondas</h3>
-  <p>Por la regla de multiplicación, cada coeficiente desplaza y escala su onda:</p>
-  $$\alpha\ket0=|\alpha|\cos(t-\arg\alpha),\qquad \beta\ket1=|\beta|\cos(2t-\arg\beta),\qquad
-    \psi(t)=|\alpha|\cos(t-\arg\alpha)+|\beta|\cos(2t-\arg\beta).$$
-  <p>La cresta de $\alpha\ket0$ está en $t_\alpha=\arg\alpha$ y tiene altura $|\alpha|$; las de
-  $\beta\ket1$ están en $t_\beta=\tfrac12\arg\beta$ y en $t_\beta+\pi$, con altura $|\beta|$.</p>
+  <p>Se aplica la regla $(Ae^{ix})\cdot\cos nt=A\cos(nt-x)$ con $n=1$ y con $n=2$:</p>
+  $$\alpha\ket0=A\cos(t-x),\qquad \beta\ket1=B\cos(2t-y),\qquad
+    \psi(t)=A\cos(t-x)+B\cos(2t-y).$$
+  <p>El módulo es la altura de la onda y la fase indica cuánto se corre. La cresta de
+  $\alpha\ket0$ está en $t_\alpha\equiv x$, con altura $A$; las de $\beta\ket1$ están en
+  $t_\beta\equiv\tfrac y2$ y en $t_\beta+\pi$, con altura $B$ ($y$ se divide entre $2$ porque esa
+  onda oscila el doble de rápido).</p>
 
-  <h3>(b) → (a): de la onda a los coeficientes</h3>
-  <p>Los coeficientes son los productos hermíticos del punto 1.1 con $\ket0$ y $\ket1$:</p>
-  $$\alpha=\braket{0}{\psi}=\frac1\pi\int_0^{2\pi}\psi(t)\,e^{it}\,dt,\qquad
-    \beta=\braket{1}{\psi}=\frac1\pi\int_0^{2\pi}\psi(t)\,e^{2it}\,dt .$$
-  <p>Leídos en las crestas: $|\alpha|$ y $|\beta|$ son las alturas, $\arg\alpha=t_\alpha$ y
-  $\arg\beta=2t_\beta$.</p>
+  <h3>(b) → (a): de las ondas a los coeficientes</h3>
+  <p>Se leen las crestas, invirtiendo lo anterior:</p>
+  $$A=\text{altura de }\alpha\ket0,\quad x\equiv t_\alpha,\qquad
+    B=\text{altura de }\beta\ket1,\quad y\equiv 2t_\beta .$$
+
+  <h3>Fase global y fase relativa</h3>
+  <p>Multiplicar un número complejo por $e^{i\gamma}$ lo gira un ángulo $\gamma$ alrededor del
+  origen sin cambiar su módulo. Una <b>fase global</b> multiplica los dos coeficientes por el
+  mismo $e^{i\gamma}$: en el panel (a), $\alpha$ y $\beta$ giran juntos, como si estuvieran
+  pegados (pruébelo con el deslizador). $A$ y $B$ no cambian, y ninguna medición distingue
+  $\ket\psi$ de $e^{i\gamma}\ket\psi$, así que se consideran el mismo estado. Lo que se conserva al
+  girar los dos juntos es el ángulo entre ellos, la <b>fase relativa</b> $y-x$ (el arco rojo del
+  panel (a)); esa sí cambia el estado. Por ejemplo, $\ket+=\tfrac1{\sqrt2}(\ket0+\ket1)$ y
+  $\ket-=\tfrac1{\sqrt2}(\ket0-\ket1)$ tienen los mismos módulos, pero fases relativas $0$ y $\pi$,
+  y son ortogonales.</p>
 
   <h3>(a) → (c): de los coeficientes a la esfera</h3>
-  $$\cos\tfrac\theta2=|\alpha|,\quad \sin\tfrac\theta2=|\beta|,\quad \varphi=\arg\beta-\arg\alpha,$$
+  <p>Al sacar la fase global $e^{ix}$, el estado queda como $A\ket0+Be^{i(y-x)}\ket1$, y la
+  longitud en la esfera es la fase relativa, $\varphi\equiv y-x$. Para la inclinación $\theta$ (el
+  ángulo desde el polo norte): como $A^2+B^2=1$, el punto $(A,B)$ está en un cuarto de
+  circunferencia y se escribe $A=\cos\omega$, $B=\sin\omega$ con $\omega\in[0,\tfrac\pi2]$. En la
+  esfera, $\ket0$ (polo norte) y $\ket1$ (polo sur) están separados un ángulo $\pi$, el doble, así
+  que $\theta=2\omega$:</p>
+  $$\cos\tfrac\theta2=A,\qquad \sin\tfrac\theta2=B,\qquad \varphi\equiv y-x,$$
   $$\vec r=(\sin\theta\cos\varphi,\ \sin\theta\sin\varphi,\ \cos\theta)
-    =\bigl(2\operatorname{Re}(\overline\alpha\beta),\ 2\operatorname{Im}(\overline\alpha\beta),\ |\alpha|^2-|\beta|^2\bigr).$$
-  <p>Si $\alpha=0$ o $\beta=0$ el estado está en un polo y $\varphi$ no interviene.</p>
+    =\bigl(2\operatorname{Re}(\overline\alpha\beta),\ 2\operatorname{Im}(\overline\alpha\beta),\ A^2-B^2\bigr).$$
+  <p>La altura del punto, $\cos\theta=A^2-B^2$, es la probabilidad de $0$ menos la de $1$. Si
+  $A=0$ o $B=0$ el estado está en un polo y $\varphi$ no interviene.</p>
 
   <h3>(c) → (a): de la esfera a los coeficientes</h3>
   $$\alpha=e^{i\gamma}\cos\tfrac\theta2,\qquad \beta=e^{i(\gamma+\varphi)}\sin\tfrac\theta2,$$
-  <p>donde la fase global $\gamma$ es libre: la esfera no la registra.</p>
+  <p>es decir, $A=\cos\tfrac\theta2$, $x=\gamma$, $B=\sin\tfrac\theta2$, $y=\gamma+\varphi$, donde
+  la fase global $\gamma$ es libre: la esfera no la registra.</p>
 
-  <h3>(b) → (c): de la onda a la esfera</h3>
-  $$\cos\theta=|\alpha|^2-|\beta|^2=(\text{altura de }\alpha\ket0)^2-(\text{altura de }\beta\ket1)^2,
+  <h3>(b) → (c): de las ondas a la esfera</h3>
+  <p>Con $A$, $B$ como alturas, $x\equiv t_\alpha$ y $y\equiv 2t_\beta$:</p>
+  $$\cos\theta=(\text{altura de }\alpha\ket0)^2-(\text{altura de }\beta\ket1)^2,
     \qquad \varphi\equiv 2t_\beta-t_\alpha \pmod{2\pi}.$$
-  <p>La latitud mide cómo se reparte la norma entre las frecuencias $1$ y $2$; la longitud mide el
-  desfase entre las crestas, contado en la escala de la frecuencia $2$.</p>
+  <p>La inclinación depende solo de las alturas; la longitud mide el desfase entre las crestas,
+  contado en la escala de la frecuencia $2$.</p>
 
   <h3>(c) → (b): de la esfera a la onda</h3>
   $$\psi(t)=\cos\tfrac\theta2\,\cos(t-\gamma)+\sin\tfrac\theta2\,\cos(2t-\gamma-\varphi).$$
 
   <h3>Fase global y desplazamientos en el tiempo</h3>
-  <p>Multiplicar el estado por $e^{i\gamma}$ corre la onda $\alpha\ket0$ una distancia $\gamma$ y
-  la onda $\beta\ket1$ solo $\gamma/2$, de modo que $\psi$ cambia de forma, pero el punto de Bloch
-  no se mueve. En cambio, desplazar $\psi$ en el tiempo una cantidad $\tau$ multiplica $\alpha$ por
-  $e^{i\tau}$ y $\beta$ por $e^{2i\tau}$; esto suma $\tau$ a $\varphi$ y hace girar el punto de
-  Bloch alrededor del eje $z$.</p>
+  <p>Cambiar la fase global $\gamma$ corre la onda $\alpha\ket0$ una distancia $\gamma$ y la onda
+  $\beta\ket1$ solo $\gamma/2$, de modo que $\psi$ cambia de forma, pero el punto de Bloch no se
+  mueve. En cambio, desplazar $\psi$ en el tiempo una cantidad $\tau$ multiplica $\alpha$ por
+  $e^{i\tau}$ y $\beta$ por $e^{2i\tau}$ (no es una fase global, porque los factores son
+  distintos); la fase relativa pasa de $y-x$ a $y-x+\tau$ y el punto de Bloch gira alrededor del
+  eje $z$.</p>
 </section>
 
 <footer>
@@ -157,8 +182,8 @@ const S2 = Math.SQRT1_2;
 const COL = {a: "#1F5FA8", b: "#D35400", psi: "#1d1d1f", p: "#7D3C98",
              eje: "#9a9a9a", tenue: "#cfcbc0", texto: "#4a4a4a"};
 
-// El estado se guarda como módulos y fases por separado, para no perder la
-// fase de un coeficiente cuando su módulo vale 0.
+// El estado se guarda como α = A e^{ix}, β = B e^{iy}: ra = A, pa = x, rb = B, pb = y.
+// Módulos y fases van por separado para no perder la fase cuando un módulo vale 0.
 const st = {ra: S2, pa: 0, rb: S2, pb: Math.PI / 3};
 
 function envolver(p) {               // lleva un ángulo a (-π, π]
@@ -182,20 +207,13 @@ function ondas(t) {
   const g = st.rb * Math.cos(2 * t - st.pb);
   return [f, g, f + g];
 }
-// (b)→(a): α = (1/π)∫ψ e^{it} dt, β = (1/π)∫ψ e^{2it} dt (suma de Riemann)
-function coeficientes(N = 2000) {
-  const dt = TAU / N;
-  let ar = 0, ai = 0, br = 0, bi = 0, n2 = 0;
-  for (let k = 0; k < N; k++) {
-    const t = k * dt, v = ondas(t)[2];
-    ar += v * Math.cos(t); ai += v * Math.sin(t);
-    br += v * Math.cos(2 * t); bi += v * Math.sin(2 * t);
-    n2 += v * v;
-  }
-  const c = dt / Math.PI;
-  return {alpha: [ar * c, ai * c], beta: [br * c, bi * c], norma2: n2 * c};
+// (b)→(a): crestas. α|0⟩ tiene su cresta en t_α ≡ x; β|1⟩ en t_β ≡ y/2 y en t_β + π
+function crestas() {
+  const ta = ((st.pa % TAU) + TAU) % TAU;
+  const tb = ((st.pb / 2 % Math.PI) + Math.PI) % Math.PI;
+  return {a: [[ta, st.ra]], b: [[tb, st.rb], [tb + Math.PI, st.rb]]};
 }
-// (a)→(c): θ, φ y r = (sinθ cosφ, sinθ sinφ, cosθ)
+// (a)→(c): cos(θ/2) = A, sin(θ/2) = B, φ ≡ y − x, y r = (sinθ cosφ, sinθ sinφ, cosθ)
 function bloch() {
   const theta = 2 * Math.atan2(st.rb, st.ra);
   const phi = envolver(st.pb - st.pa);
@@ -255,6 +273,9 @@ const aX = x => A.c + A.s * x, aY = y => A.c - A.s * y;
   el(svgA, "text", {x: aX(0) + 6, y: aY(1.3) + 10, "font-size": 12, fill: COL.texto}, "Im");
   el(svgA, "text", {x: aX(1) + 3, y: aY(0) + 14, "font-size": 11, fill: COL.texto}, "1");
 })();
+// arco de la fase relativa y − x (de la dirección de α a la de β)
+const arcoRel = el(svgA, "path", {fill: "none", stroke: "#A61C2D", "stroke-width": 2});
+const lblRel = el(svgA, "text", {"font-size": 12, fill: "#A61C2D", "text-anchor": "middle"}, "y − x");
 const objA = {};
 for (const [k, col, nombre] of [["a", COL.a, "α"], ["b", COL.b, "β"]]) {
   objA[k] = {
@@ -317,11 +338,6 @@ const objB = {
   cb1: el(svgB, "circle", {r: 7, fill: COL.b, stroke: "#fff", "stroke-width": 2, class: "arrastrable"}),
   cb2: el(svgB, "circle", {r: 7, fill: COL.b, stroke: "#fff", "stroke-width": 2, class: "arrastrable"}),
 };
-function crestas() {
-  const ta = ((st.pa % TAU) + TAU) % TAU;
-  const tb = ((st.pb / 2 % Math.PI) + Math.PI) % Math.PI;
-  return {a: [[ta, st.ra]], b: [[tb, st.rb], [tb + Math.PI, st.rb]]};
-}
 arrastre(svgB,
   ev => {
     let mejor = null, dmin = 22;
@@ -432,6 +448,21 @@ function actualizar(sincronizarGamma = true) {
     o.lbl.setAttribute("x", aX(z[0]) + 9); o.lbl.setAttribute("y", aY(z[1]) - 9);
   }
 
+  // arco de la fase relativa, de radio fijo, recorrido desde la dirección de α
+  {
+    const rel = envolver(st.pb - st.pa), R = 0.3, n = 40;
+    let d = "";
+    for (let k = 0; k <= n; k++) {
+      const ang = st.pa + rel * k / n;
+      d += `${k ? "L" : "M"}${aX(R * Math.cos(ang)).toFixed(1)} ${aY(R * Math.sin(ang)).toFixed(1)}`;
+    }
+    const visible = st.ra > 1e-3 && st.rb > 1e-3 && Math.abs(rel) > 1e-3;
+    arcoRel.setAttribute("d", visible ? d : "");
+    const mid = st.pa + rel / 2;
+    lblRel.setAttribute("x", aX(0.47 * Math.cos(mid))); lblRel.setAttribute("y", aY(0.47 * Math.sin(mid)) + 4);
+    lblRel.setAttribute("opacity", visible ? 1 : 0);
+  }
+
   // (b)
   let da = "", db = "", dp = "";
   for (let k = 0; k <= 400; k++) {
@@ -461,13 +492,12 @@ function actualizar(sincronizarGamma = true) {
   gammaValor.textContent = Math.round(st.pa * 180 / Math.PI) + "°";
 
   // lectura numérica
-  const num = coeficientes();
   const ta = cr.a[0][0], tb = cr.b[0][0];
   document.getElementById("lectura").innerHTML = `
-    <div><b style="color:${COL.a}">α</b> = ${cplx(a)}<br>|α| = ${st.ra.toFixed(3)}, arg α = ${grados(st.pa)}<br>P(0) = |α|² = ${(st.ra ** 2).toFixed(3)}</div>
-    <div><b style="color:${COL.b}">β</b> = ${cplx(b)}<br>|β| = ${st.rb.toFixed(3)}, arg β = ${grados(st.pb)}<br>P(1) = |β|² = ${(st.rb ** 2).toFixed(3)}</div>
-    <div><b>Onda → coeficientes</b> (Riemann, N = 2000)<br>(1/π)∫ψ e<sup>it</sup> dt = ${cplx(num.alpha)}<br>(1/π)∫ψ e<sup>2it</sup> dt = ${cplx(num.beta)}<br>(1/π)∫ψ² dt = ${num.norma2.toFixed(3)}</div>
-    <div><b style="color:${COL.p}">Bloch</b><br>θ = ${grados(theta)}, φ = ${grados(phi)}<br>crestas: t<sub>α</sub> = ${grados(ta)}, t<sub>β</sub> = ${grados(tb)}<br>r = (${r.map(v => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(3)).join(", ")})</div>`;
+    <div><b style="color:${COL.a}">α = A e<sup>ix</sup></b> = ${cplx(a)}<br>A = ${st.ra.toFixed(3)}, x = ${grados(st.pa)}<br>P(0) = A² = ${(st.ra ** 2).toFixed(3)}</div>
+    <div><b style="color:${COL.b}">β = B e<sup>iy</sup></b> = ${cplx(b)}<br>B = ${st.rb.toFixed(3)}, y = ${grados(st.pb)}<br>P(1) = B² = ${(st.rb ** 2).toFixed(3)}</div>
+    <div><b>Crestas y fase relativa</b><br>t<sub>α</sub> = ${grados(ta)} (≡ x)<br>t<sub>β</sub> = ${grados(tb)} (≡ y/2)<br><span style="color:#A61C2D">y − x</span> = ${grados(envolver(st.pb - st.pa))}<br>2t<sub>β</sub> − t<sub>α</sub> ≡ ${grados(envolver(2 * tb - ta))}</div>
+    <div><b style="color:${COL.p}">Bloch</b><br>θ = ${grados(theta)}: cos(θ/2) = ${Math.cos(theta / 2).toFixed(3)} = A<br>φ = ${grados(phi)} (= y − x)<br>r = (${r.map(v => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(3)).join(", ")})</div>`;
 }
 
 // enlace al repositorio a partir de la URL de GitHub Pages (usuario.github.io/repo)
